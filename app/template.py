@@ -20,6 +20,6 @@ def find_template_name(
             if t_type == q_type:
                 i -= 1
                 if i == 0:
-                    return t.pop("name")
+                    return t.get("name")
 
     return None
