@@ -12,6 +12,9 @@ def find_template_name(
     comp_len = 0
     for t in templates:
         base_len = len(t) - 1
+        if base_len > len(query):
+            continue
+
         i = base_len
         for q_key, q_value in query.items():
             if q_key not in t.keys():
