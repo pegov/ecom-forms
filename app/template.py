@@ -7,9 +7,12 @@ def find_template_name(
     templates: Iterable[Dict[str, str]],
     query: Dict[str, str],
 ) -> Optional[str]:
-    """Find first valid template name."""
+    """Find the most compatible template name."""
+    comp_name = ""
+    comp_len = 0
     for t in templates:
-        i = len(t) - 1
+        base_len = len(t) - 1
+        i = base_len
         for q_key, q_value in query.items():
             if q_key not in t.keys():
                 continue
@@ -20,6 +23,13 @@ def find_template_name(
             if t_type == q_type:
                 i -= 1
                 if i == 0:
-                    return t.get("name")
+                    if base_len > comp_len:
+                        comp_name = t.get("name")
+                        comp_len = base_len
+
+                    break
+
+    if comp_len > 0:
+        return comp_name
 
     return None
