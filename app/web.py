@@ -2,14 +2,16 @@ from typing import Iterable, Dict, Annotated
 
 from fastapi import FastAPI, Request, Depends, HTTPException
 
+from app.db import AbstractDatabase
 from app.template import find_template_name
 from app.validator import validate
 
 app = FastAPI()
 
 
-def get_templates(request: Request) -> Dict[str, str]:
-    return request.app.state.db
+def get_templates(request: Request) -> Iterable[Dict[str, str]]:
+    db: AbstractDatabase = request.app.state.db
+    return db.get_templates()
 
 
 TemplatesDep = Annotated[Iterable[Dict[str, str]], Depends(get_templates)]
@@ -45,6 +47,6 @@ async def get_form(request: Request, templates: TemplatesDep):
     return res
 
 
-def get_app(db: Iterable[dict]) -> FastAPI:
+def get_app(db: AbstractDatabase) -> FastAPI:
     app.state.db = db
     return app
