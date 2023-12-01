@@ -5,8 +5,10 @@ from fastapi import FastAPI, Request, Depends, HTTPException
 from app.db import AbstractDatabase
 from app.validator import validate
 
-ERROR_MESSAGE_EMPTY_FIELD_NAME = "field name is empty"
-ERROR_MESSAGE_NO_DATA = "no data"
+ERROR_MESSAGE_EMPTY_FIELD_NAME = "empty field name"  # "=value1"
+ERROR_MESSAGE_EMPTY_ITEM = "empty item"  # "fname1=value1&"
+ERROR_MESSAGE_INVALID_ITEM = "invalid item"  # "fname1=value1&wrong"
+ERROR_MESSAGE_NO_DATA = "no data"  # ""
 
 app = FastAPI()
 
@@ -21,20 +23,28 @@ DatabaseDep = Annotated[AbstractDatabase, Depends(get_db)]
 
 # f_name1=value1&f_name2=value2
 # I assume it is raw body, not JSON.
-# So we need to split raw body by '&' and items by '=' to get data.
+# So we need to split raw body by '&' and items by '=' to get the data.
 @app.post("/get_form")
 async def get_form(request: Request, db: DatabaseDep):
     body = (await request.body()).decode()
     fields = {}
-    for item in body.split("&"):
-        key, value = item.split("=", 1)
-        if len(key) == 0:
+    items = body.split("&")
+    if len(items) == 1 and not items[0]:
+        raise HTTPException(400, detail=ERROR_MESSAGE_NO_DATA)
+
+    for item in items:
+        if not item:
+            raise HTTPException(400, detail=ERROR_MESSAGE_EMPTY_ITEM)
+
+        pair = item.split("=", 1)
+        if len(pair) < 2:
+            raise HTTPException(400, detail=ERROR_MESSAGE_INVALID_ITEM)
+
+        key, value = pair
+        if not key:
             raise HTTPException(400, detail=ERROR_MESSAGE_EMPTY_FIELD_NAME)
 
         fields.update({key: validate(value)})
-
-    if len(fields) == 0:
-        raise HTTPException(400, detail=ERROR_MESSAGE_NO_DATA)
 
     name = db.get_template_name(fields)
 
