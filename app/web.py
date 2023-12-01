@@ -5,6 +5,9 @@ from fastapi import FastAPI, Request, Depends, HTTPException
 from app.db import AbstractDatabase
 from app.validator import validate
 
+ERROR_MESSAGE_EMPTY_FIELD_NAME = "field name is empty"
+ERROR_MESSAGE_NO_DATA = "no data"
+
 app = FastAPI()
 
 
@@ -26,12 +29,12 @@ async def get_form(request: Request, db: DatabaseDep):
     for item in body.split("&"):
         key, value = item.split("=", 1)
         if len(key) == 0:
-            raise HTTPException(400, detail="field name is empty")
+            raise HTTPException(400, detail=ERROR_MESSAGE_EMPTY_FIELD_NAME)
 
         fields.update({key: validate(value)})
 
     if len(fields) == 0:
-        raise HTTPException(400, detail="no data")
+        raise HTTPException(400, detail=ERROR_MESSAGE_NO_DATA)
 
     name = db.get_template_name(fields)
 
